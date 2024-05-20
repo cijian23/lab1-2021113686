@@ -2,6 +2,10 @@ import java.util.*;
 
 /* 在这里添加注释，用于测试R3——查看上次提交之后都有哪些文件修改、具体修改内容是什么 */
 
+
+
+
+// 在B1分支上对同样的2个文件做不同修改并提交
 public class GraphDemo {
 
     protected Map<String, Integer> nameToIndex; // 节点名称到索引的映射
