@@ -1,4 +1,8 @@
-import java.util.*;
+
+import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+import java.util.ArrayList;
 // 在B2分支上对2个文件做修改并提交
 /* 在这里添加注释，用于测试R3——查看上次提交之后都有哪些文件修改、具体修改内容是什么 */
 /* 在这里添加注释，用于测试R5——再次对部分文件进行修改，重新提交 */
@@ -80,14 +84,25 @@ public class GraphDemo {
             addEdge(words[i],words[i+1]);
         }
     }
+
+    // 返回 indexToName 的不可变副本
     public List<String> getNode(){
-        return indexToName;
-    }
-    public Map<String, Integer> getnameToIndex(){
-        return nameToIndex;
+        return new ArrayList<>(indexToName);
     }
 
-    public List<List<Integer>> getAdj(){return adj;}
+    // 返回 nameToIndex 的不可变副本
+    public Map<String, Integer> getnameToIndex(){
+        return new HashMap<>(nameToIndex);
+    }
+
+    // 返回 adj 的深拷贝
+    public List<List<Integer>> getAdj(){
+        List<List<Integer>> adjCopy = new ArrayList<>();
+        for (List<Integer> neighbors : adj) {
+            adjCopy.add(new ArrayList<>(neighbors));
+        }
+        return adjCopy;
+    }
 
     public static void main(String[] args) {
         GraphDemo graph = new GraphDemo(5);

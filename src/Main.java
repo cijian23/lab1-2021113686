@@ -1,12 +1,28 @@
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.*;
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import java.util.Set;
+import java.util.Map;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.Arrays;
+import java.util.Scanner;
+import java.util.ArrayList;
+import java.security.SecureRandom;
 import java.util.stream.StreamSupport;
+
+import javax.imageio.ImageIO;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 // 在B2分支上对2个文件做修改并提交
 /* 在这里添加注释，用于测试R3——查看上次提交之后都有哪些文件修改、具体修改内容是什么 */
 /* 在这里添加注释，用于测试R5——再次对部分文件进行修改，重新提交 */
@@ -23,11 +39,12 @@ import java.util.stream.StreamSupport;
 public class Main {
 
     private static GraphDemo graph;
+    private static SecureRandom rondom = new SecureRandom();
 
     public static String readFile(String filePath) {
         StringBuilder contentBuilder = new StringBuilder();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath, StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
                 contentBuilder.append(line).append("\n");
@@ -41,7 +58,7 @@ public class Main {
         return output;
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         //从文本文件读取数据，进行处理（忽略非字母字符，标点符号和大小写，等等）
         //并在图形结构中存储处理后的数据。每个单词可以表示为图的节点，每个单词之间的关系可以表示为边。
         //请注意，这可能需要实现一个输入/输出(IO)函数，读入文本文件，返回清理和格式化后的字符串数组。
@@ -50,7 +67,7 @@ public class Main {
         graph = new GraphDemo(100);
         graph.create_graph(content);
         int choice = 0;
-        Scanner scanner = new Scanner(System.in);
+        Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
         while (choice != 1){
             System.out.print("############# Welcome to our program #############\n");
             System.out.print("1——Exiting program.\n");
@@ -68,7 +85,7 @@ public class Main {
                     break;
                 case 2:
                     //展示生成的有向图。可以通过遍历节点和边的方式实现这一步骤，将每个节点和它的邻居一起输出。
-                    List<String> nonelist = new ArrayList<String>();
+                    List<String> nonelist = new ArrayList<>();
                     //设置JFrame frame
                     JFrame frame = new JFrame("Graph Visualization");
                     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -100,7 +117,7 @@ public class Main {
                     String word1 = scanner.next().toLowerCase();
                     System.out.print("Enter word2: ");
                     String word2 = scanner.next().toLowerCase();
-                    String result = queryBridgeWords(word1, word2);
+                    String result = queryBridgeWords(graph, word1, word2);
                     System.out.println(result);
                     break;
                 case 4:
@@ -206,7 +223,7 @@ public class Main {
                 for (String node : nodes) {
                     Iterable<String> neighbors = graph.adj(node);
                     List<String> neighborList = StreamSupport.stream(neighbors.spliterator(), false)
-                            .collect(Collectors.toList());
+                            .toList();
                     String start = node;
                     for (String end : neighborList) {
                         double startx = centerX + -r * Math.sin(((double) map.get(start) / node_num) * 2 * Math.PI);
@@ -262,7 +279,7 @@ public class Main {
         }
     }
 
-    public static List<String> getBridgeWords(String word1, String word2) {
+    public static List<String> getBridgeWords(GraphDemo graph, String word1, String word2) {
         Set<String> bridgeWords = new HashSet<>();
         word1 = word1.toLowerCase();
         word2 = word2.toLowerCase();
@@ -284,7 +301,7 @@ public class Main {
         return new ArrayList<>(bridgeWords);
     }
 
-    public static String queryBridgeWords(String word1, String word2) {
+    public static String queryBridgeWords(GraphDemo graph, String word1, String word2) {
         if (!graph.nameToIndex.containsKey(word1) && !graph.nameToIndex.containsKey(word2)) {
             return "No \"" + word1 + "\" and \"" + word2 + "\" in the graph!";
         }
@@ -295,7 +312,7 @@ public class Main {
             return "No \"" + word2 + "\" in the graph!";
         }
 
-        List<String> bridgeWords = getBridgeWords(word1, word2);
+        List<String> bridgeWords = getBridgeWords(graph, word1, word2);
 
         if (bridgeWords.isEmpty()) {
             return "No bridge words from \"" + word1 + "\" to \"" + word2 + "\"!";
@@ -313,11 +330,10 @@ public class Main {
             String word2 = words[i + 1];
             newTextBuilder.append(word1).append(" ");
 
-            List<String> bridgeWords = getBridgeWords(word1, word2);
+            List<String> bridgeWords = getBridgeWords(graph, word1, word2);
             if (!bridgeWords.isEmpty()) {
                 // 随机选择一个桥接词插入
-                Random random = new Random();
-                String bridgeWord = bridgeWords.get(random.nextInt(bridgeWords.size()));
+                String bridgeWord = bridgeWords.get(rondom.nextInt(bridgeWords.size()));
                 newTextBuilder.append(bridgeWord).append(" ");
             }
         }
@@ -388,7 +404,7 @@ public class Main {
             result.add(new ArrayList<>(path)); // Add path to result if it has the shortest length
             return;
         }
-        List<String> neilist = new ArrayList<String>();
+        List<String> neilist = new ArrayList<>();
         for(int next : linjie.get(from)){
             if(!neilist.contains(nodes.get(next))){
                 neilist.add(nodes.get(next));
@@ -405,7 +421,7 @@ public class Main {
     public static String randomWalk() {
         List<List<Integer>> linjie = graph.getAdj();
         List<String> nodes = graph.getNode();
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
         List<String> have_edges = new ArrayList<>();
         int lastNodeIndex = random.nextInt(nodes.size());
         System.out.print(nodes.get(lastNodeIndex) + " ");
@@ -463,14 +479,14 @@ public class Main {
 
     // 等待用户输入的线程类
     static class UserInputListener implements Runnable {
-        private Scanner scan = new Scanner(System.in);
+        private Scanner scan = new Scanner(System.in, StandardCharsets.UTF_8);
         private volatile boolean interrupted = false; // 标志变量
 
         @Override
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 if (scan.hasNextLine()) {
-                    String input = scan.nextLine();
+                    scan.nextLine();
                     interrupted = true; // 设置标志变量
                     break; // 用户输入后退出循环
                 }
@@ -484,7 +500,7 @@ public class Main {
 
     //写文件
     public static void writefile(String content,String filePath){
-        try (FileWriter writer = new FileWriter(filePath)) {
+        try (FileWriter writer = new FileWriter(filePath, StandardCharsets.UTF_8)) {
             writer.write(content);
             System.out.println("成功写入文件！");
         } catch (IOException e) {
